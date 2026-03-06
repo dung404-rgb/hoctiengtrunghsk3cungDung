@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Từ Vựng Tiếng Trung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        select, input, button {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box; /* Đảm bảo kích thước không bị tràn */
+        }
+        .chinese-word {
+            font-size: 48px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 40px; /* Đủ chỗ cho 2 dòng thông báo */
+            white-space: pre-line; /* Giữ lại dấu xuống dòng trong code JS */
+        }
+        .correct { color: #2ecc71; }
+        .incorrect { color: #e74c3c; }
+        .warning { color: #f39c12; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Học Từ Vựng Tiếng Trung 📚</h2>
+    
+    <select id="lessonSelect" onchange="loadLesson()">
+        <option value="1">Bài 1: 周末你有什么打算?</option>
+        <option value="2">Bài 2: 他什么时候回来?</option>
+        <option value="3">Bài 3: 桌子上放着很多饮料</option>
+        <option value="4">Bài 4: 他总是笑着跟客人说话</option>
+        <option value="5">Bài 5: 我最近越来越胖了</option>
+        <option value="6">Bài 6: 怎么突然找不到了?</option>
+        <option value="7">Bài 7: 我跟他都认识五年了</option>
+        <option value="8">Bài 8: 你去哪儿我就去哪儿</option>
+        <option value="9">Bài 9: 她的汉语说得跟中国人一样好</option>
+        <option value="10">Bài 10: 数学比历史难多了</option>
+    </select>
+
+    <div class="chinese-word" id="wordDisplay">字</div>
+    
+    <input type="text" id="pinyinInput" placeholder="Nhập Pinyin (không dấu, vd: zhoumo)">
+    <input type="text" id="meaningInput" placeholder="Nhập Nghĩa (vd: cuối tuần)">
+    
+    <button onclick="checkAnswer()">Kiểm tra</button>
+    <button onclick="nextWord()" style="background-color: #95a5a6;">Từ tiếp theo</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    const vocabData = {
+        "1": [
+            { word: "周末", pinyin: "zhoumo", meaning: "cuối tuần" },
+            { word: "打算", pinyin: "dasuan", meaning: "kế hoạch, dự định" },
+            { word: "啊", pinyin: "a", meaning: "dùng cuối câu" },
+            { word: "跟", pinyin: "gen", meaning: "cùng, với" },
+            { word: "一直", pinyin: "yizhi", meaning: "suốt, liên tục" },
+            { word: "游戏", pinyin: "youxi", meaning: "trò chơi" },
+            { word: "作业", pinyin: "zuoye", meaning: "bài tập về nhà" },
+            { word: "着急", pinyin: "zhaoji", meaning: "lo lắng" },
+            { word: "复习", pinyin: "fuxi", meaning: "ôn tập" },
+            { word: "面包", pinyin: "mianbao", meaning: "bánh mì" },
+            { word: "带", pinyin: "dai", meaning: "mang theo" },
+            { word: "地图", pinyin: "ditu", meaning: "bản đồ" },
+            { word: "搬", pinyin: "ban", meaning: "dọn, chuyển" },
+            { word: "现在", pinyin: "xianzai", meaning: "hiện tại" },
+            { word: "一起", pinyin: "yiqi", meaning: "cùng, với" },
+            { word: "咱们", pinyin: "zanmen", meaning: "chúng mình" },
+            { word: "走", pinyin: "zou", meaning: "đi" },
+            { word: "常", pinyin: "chang", meaning: "thường thường" },
+            { word: "时候", pinyin: "shihou", meaning: "khi, lúc" },
+            { word: "借", pinyin: "jie", meaning: "mượn" },
+            { word: "上网", pinyin: "shangwang", meaning: "lên mạng" },
+            { word: "网", pinyin: "wang", meaning: "mạng" },
+            { word: "查", pinyin: "cha", meaning: "tra" },
+            { word: "资料", pinyin: "ziliao", meaning: "tư liệu" },
+            { word: "总是", pinyin: "zongshi", meaning: "luôn luôn" },
+            { word: "安静", pinyin: "anjing", meaning: "yên tĩnh" },
+            { word: "晚上", pinyin: "wanshang", meaning: "buổi tối" },
+            { word: "课文", pinyin: "kewen", meaning: "bài đọc" },
+            { word: "预习", pinyin: "yuxi", meaning: "chuẩn bị bài" },
+            { word: "生词", pinyin: "shengci", meaning: "từ mới" },
+            { word: "或者", pinyin: "huozhe", meaning: "hoặc" },
+            { word: "练习", pinyin: "lianxi", meaning: "luyện tập" },
+            { word: "聊天儿", pinyin: "liaotianr", meaning: "tán gẫu" },
+            { word: "收发", pinyin: "shoufa", meaning: "nhận và gửi thư" },
+            { word: "收", pinyin: "shou", meaning: "nhận" },
+            { word: "发", pinyin: "fa", meaning: "gửi" },
+            { word: "邮件", pinyin: "youjian", meaning: "email" },
+            { word: "电影", pinyin: "dianying", meaning: "phim" },
+            { word: "电视剧", pinyin: "dianshiju", meaning: "phim truyền hình" },
+            { word: "电视", pinyin: "dianshi", meaning: "tivi" },
+            { word: "休息", pinyin: "xiuxi", meaning: "nghỉ ngơi" },
+            { word: "宿舍", pinyin: "sushe", meaning: "kí túc xá" },
+            { word: "公园", pinyin: "gongyuan", meaning: "công viên" },
+            { word: "超市", pinyin: "chaoshi", meaning: "siêu thị" },
+            { word: "东西", pinyin: "dongxi", meaning: "đồ, vật" }
+        ],
+        "2": [
+            { word: "腿", pinyin: "tui", meaning: "chân" },
+            { word: "疼", pinyin: "teng", meaning: "đau, nhức" },
+            { word: "脚", pinyin: "jiao", meaning: "bàn chân" },
+            { word: "树", pinyin: "shu", meaning: "cây" },
+            { word: "容易", pinyin: "rongyi", meaning: "dễ dàng" },
+            { word: "难", pinyin: "nan", meaning: "khó" },
+            { word: "太太", pinyin: "taitai", meaning: "bà" },
+            { word: "秘书", pinyin: "mishu", meaning: "thư ký" },
+            { word: "经理", pinyin: "jingli", meaning: "giám đốc" },
+            { word: "办公室", pinyin: "bangongshi", meaning: "văn phòng" },
+            { word: "辆", pinyin: "liang", meaning: "chiếc" },
+            { word: "楼", pinyin: "lou", meaning: "tòa nhà, tầng" },
+            { word: "拿", pinyin: "na", meaning: "cầm, lấy" },
+            { word: "把", pinyin: "ba", meaning: "con, cây" },
+            { word: "伞", pinyin: "san", meaning: "cái ô" },
+            { word: "胖", pinyin: "pang", meaning: "béo" },
+            { word: "其实", pinyin: "qishi", meaning: "thật ra" },
+            { word: "瘦", pinyin: "shou", meaning: "gầy" },
+            { word: "在", pinyin: "zai", meaning: "đang" },
+            { word: "出来", pinyin: "chulai", meaning: "ra ngoài" },
+            { word: "来", pinyin: "lai", meaning: "đến" },
+            { word: "正在", pinyin: "zhengzai", meaning: "đang" },
+            { word: "音乐", pinyin: "yinyue", meaning: "âm nhạc" },
+            { word: "没有", pinyin: "meiyou", meaning: "không có" },
+            { word: "正", pinyin: "zheng", meaning: "đang" },
+            { word: "录音", pinyin: "luyin", meaning: "ghi âm" },
+            { word: "书店", pinyin: "shudian", meaning: "tiệm sách" },
+            { word: "想", pinyin: "xiang", meaning: "nghĩ, muốn" },
+            { word: "汉英", pinyin: "hanying", meaning: "Trung-Anh" },
+            { word: "坐", pinyin: "zuo", meaning: "ngồi" },
+            { word: "挤", pinyin: "ji", meaning: "chúc, chen" },
+            { word: "骑", pinyin: "qi", meaning: "cưỡi ngựa, đi xe" },
+            { word: "行", pinyin: "xing", meaning: "được" },
+            { word: "门", pinyin: "men", meaning: "môn học" },
+            { word: "课", pinyin: "ke", meaning: "bài" },
+            { word: "综合", pinyin: "zonghe", meaning: "tổng hợp" },
+            { word: "口语", pinyin: "kouyu", meaning: "khẩu ngữ" },
+            { word: "听力", pinyin: "tingli", meaning: "môn nghe" },
+            { word: "阅读", pinyin: "yuedu", meaning: "môn đọc" },
+            { word: "文化", pinyin: "wenhua", meaning: "văn hóa" },
+            { word: "体育", pinyin: "tiyu", meaning: "thể dục" },
+            { word: "教", pinyin: "jiao", meaning: "dạy" }
+        ],
+        "3": [
+            { word: "还是", pinyin: "haishi", meaning: "hay là" },
+            { word: "爬山", pinyin: "pashan", meaning: "leo núi" },
+            { word: "小心", pinyin: "xiaoxin", meaning: "cẩn thận" },
+            { word: "条", pinyin: "tiao", meaning: "cái" },
+            { word: "裤子", pinyin: "kuzi", meaning: "quần" },
+            { word: "记得", pinyin: "jide", meaning: "còn nhớ" },
+            { word: "衬衫", pinyin: "chenshan", meaning: "áo sơ mi" },
+            { word: "元", pinyin: "yuan", meaning: "đồng" },
+            { word: "新鲜", pinyin: "xinxian", meaning: "tươi" },
+            { word: "甜", pinyin: "tian", meaning: "ngọt" },
+            { word: "只", pinyin: "zhi", meaning: "chỉ" },
+            { word: "放", pinyin: "fang", meaning: "đặt, để" },
+            { word: "饮料", pinyin: "yinliao", meaning: "đồ uống" },
+            { word: "或者", pinyin: "huozhe", meaning: "hoặc" },
+            { word: "舒服", pinyin: "shufu", meaning: "thoải mái" },
+            { word: "花", pinyin: "hua", meaning: "hoa" },
+            { word: "绿", pinyin: "lv", meaning: "màu xanh lục" },
+            { word: "包裹", pinyin: "baoguo", meaning: "bưu kiện" },
+            { word: "顺便", pinyin: "shunbian", meaning: "nhân tiện" },
+            { word: "替", pinyin: "ti", meaning: "thay thế" },
+            { word: "邮票", pinyin: "youpiao", meaning: "tem" },
+            { word: "份", pinyin: "fen", meaning: "phần" },
+            { word: "报纸", pinyin: "baozhi", meaning: "báo chí" },
+            { word: "报", pinyin: "bao", meaning: "báo" },
+            { word: "不用", pinyin: "buyong", meaning: "không cần" },
+            { word: "青年", pinyin: "qingnian", meaning: "thanh niên" },
+            { word: "旅行", pinyin: "lvxing", meaning: "du lịch" },
+            { word: "代表", pinyin: "daibiao", meaning: "đại biểu" },
+            { word: "团", pinyin: "tuan", meaning: "đoàn" },
+            { word: "当", pinyin: "dang", meaning: "làm" },
+            { word: "翻译", pinyin: "fanyi", meaning: "phiên dịch" },
+            { word: "飞机", pinyin: "feiji", meaning: "máy bay" },
+            { word: "飞", pinyin: "fei", meaning: "bay" },
+            { word: "火车", pinyin: "huoche", meaning: "tàu hỏa" },
+            { word: "回来", pinyin: "huilai", meaning: "trở về" },
+            { word: "办", pinyin: "ban", meaning: "làm" },
+            { word: "帮", pinyin: "bang", meaning: "giúp đỡ" },
+            { word: "浇", pinyin: "jiao", meaning: "tưới" },
+            { word: "没问题", pinyin: "meiwenti", meaning: "không vấn đề" },
+            { word: "问题", pinyin: "wenti", meaning: "vấn đề" },
+            { word: "上海", pinyin: "shanghai", meaning: "Thượng Hải" },
+            { word: "珍妮", pinyin: "zhenni", meaning: "Janet" }
+        ],
+        "4": [
+            { word: "比赛", pinyin: "bisai", meaning: "cuộc thi đấu" },
+            { word: "照片", pinyin: "zhaopian", meaning: "bức ảnh" },
+            { word: "年级", pinyin: "nianji", meaning: "lớp" },
+            { word: "又", pinyin: "you", meaning: "vừa" },
+            { word: "聪明", pinyin: "congming", meaning: "thông minh" },
+            { word: "热情", pinyin: "reqing", meaning: "nhiệt tình" },
+            { word: "努力", pinyin: "nuli", meaning: "nỗ lực" },
+            { word: "总是", pinyin: "zongshi", meaning: "luôn luôn" },
+            { word: "回答", pinyin: "huida", meaning: "trả lời" },
+            { word: "站", pinyin: "zhan", meaning: "đứng" },
+            { word: "饿", pinyin: "e", meaning: "đói" },
+            { word: "蛋糕", pinyin: "dangao", meaning: "bánh kem" },
+            { word: "超市", pinyin: "chaoshi", meaning: "siêu thị" },
+            { word: "年轻", pinyin: "nianqing", meaning: "trẻ tuổi" },
+            { word: "认真", pinyin: "renzhen", meaning: "nghiêm túc" },
+            { word: "客人", pinyin: "keren", meaning: "khách hàng" },
+            { word: "羽绒服", pinyin: "yurongfu", meaning: "đồ nhung" },
+            { word: "便宜", pinyin: "pianyi", meaning: "rẻ" },
+            { word: "长", pinyin: "chang", meaning: "dài" },
+            { word: "一点儿", pinyin: "yidianr", meaning: "một chút" },
+            { word: "短", pinyin: "duan", meaning: "ngắn" },
+            { word: "深", pinyin: "shen", meaning: "đậm" },
+            { word: "试", pinyin: "shi", meaning: "thử" },
+            { word: "浅", pinyin: "qian", meaning: "nhạt" },
+            { word: "可以", pinyin: "keyi", meaning: "có thể" },
+            { word: "当然", pinyin: "dangran", meaning: "đương nhiên" },
+            { word: "肥", pinyin: "fei", meaning: "rộng" },
+            { word: "合适", pinyin: "heshi", meaning: "thích hợp" },
+            { word: "好看", pinyin: "haokan", meaning: "đẹp" },
+            { word: "种", pinyin: "zhong", meaning: "loại" },
+            { word: "打折", pinyin: "dazhe", meaning: "chiết khấu" }
+        ],
+        "5": [
+            { word: "发烧", pinyin: "fashao", meaning: "sốt" },
+            { word: "为", pinyin: "wei", meaning: "cho" },
+            { word: "照顾", pinyin: "zhaogu", meaning: "chăm sóc" },
+            { word: "用", pinyin: "yong", meaning: "cần" },
+            { word: "感冒", pinyin: "ganmao", meaning: "bị cảm" },
+            { word: "季节", pinyin: "jijie", meaning: "mùa" },
+            { word: "春天", pinyin: "chuntian", meaning: "mùa xuân" },
+            { word: "草", pinyin: "cao", meaning: "cỏ" },
+            { word: "夏天", pinyin: "xiatian", meaning: "mùa hạ" },
+            { word: "裙子", pinyin: "qunzi", meaning: "váy" },
+            { word: "最近", pinyin: "zuijin", meaning: "gần đây" },
+            { word: "越", pinyin: "yue", meaning: "càng" },
+            { word: "年", pinyin: "nian", meaning: "năm" },
+            { word: "今年", pinyin: "jinnian", meaning: "năm nay" },
+            { word: "明天", pinyin: "mingtian", meaning: "năm sau" },
+            { word: "去年", pinyin: "qunian", meaning: "năm ngoái" },
+            { word: "后年", pinyin: "hounian", meaning: "năm sau nữa" },
+            { word: "毕业", pinyin: "biye", meaning: "tốt nghiệp" },
+            { word: "多", pinyin: "duo", meaning: "bao nhiêu" },
+            { word: "岁", pinyin: "sui", meaning: "tuổi" },
+            { word: "属", pinyin: "shu", meaning: "cầm tinh" },
+            { word: "狗", pinyin: "gou", meaning: "con chó" },
+            { word: "月", pinyin: "yue", meaning: "tháng" },
+            { word: "号", pinyin: "hao", meaning: "ngày" },
+            { word: "生日", pinyin: "shengri", meaning: "sinh nhật" },
+            { word: "正好", pinyin: "zhenghao", meaning: "vừa hay" },
+            { word: "过", pinyin: "guo", meaning: "trải qua" },
+            { word: "准备", pinyin: "zhunbei", meaning: "chuẩn bị" },
+            { word: "举行", pinyin: "juxing", meaning: "cử hành" },
+            { word: "晚会", pinyin: "wanhui", meaning: "buổi liên hoan" },
+            { word: "参加", pinyin: "canjia", meaning: "tham gia" },
+            { word: "时间", pinyin: "shijian", meaning: "thời gian" },
+            { word: "就", pinyin: "jiu", meaning: "thì, bèn" },
+            { word: "快乐", pinyin: "kuaile", meaning: "vui vẻ" },
+            { word: "祝你生日快乐", pinyin: "zhu ni shengri kuaile", meaning: "chúc bạn sinh nhật vui vẻ" }
+        ],
+        "6": [
+            { word: "眼镜", pinyin: "yanjing", meaning: "mắt kính" },
+            { word: "突然", pinyin: "turan", meaning: "bỗng nhiên" },
+            { word: "离开", pinyin: "likai", meaning: "rời khỏi" },
+            { word: "清楚", pinyin: "qingchu", meaning: "rõ ràng" },
+            { word: "刚才", pinyin: "gangcai", meaning: "vừa nãy" },
+            { word: "帮忙", pinyin: "bangmang", meaning: "giúp đỡ" },
+            { word: "特别", pinyin: "tebie", meaning: "vô cùng, rất" },
+            { word: "讲", pinyin: "jiang", meaning: "giảng, nói" },
+            { word: "明白", pinyin: "mingbai", meaning: "rõ ràng, dễ hiểu" },
+            { word: "锻炼", pinyin: "duanlian", meaning: "tập thể dục" },
+            { word: "音乐", pinyin: "yinyue", meaning: "âm nhạc" },
+            { word: "公园", pinyin: "gongyuan", meaning: "công viên" },
+            { word: "聊天儿", pinyin: "liaotianr", meaning: "tán gẫu" },
+            { word: "睡着", pinyin: "shuizhao", meaning: "ngủ được" },
+            { word: "更", pinyin: "geng", meaning: "càng" },
+            { word: "每", pinyin: "mei", meaning: "mỗi" },
+            { word: "早上", pinyin: "zaoshang", meaning: "sáng sớm" },
+            { word: "半", pinyin: "ban", meaning: "rưỡi" },
+            { word: "起床", pinyin: "qichuang", meaning: "thức dậy" },
+            { word: "床", pinyin: "chuang", meaning: "giường" },
+            { word: "早饭", pinyin: "zaofan", meaning: "cơm sáng" },
+            { word: "午饭", pinyin: "wufan", meaning: "cơm trưa" },
+            { word: "晚饭", pinyin: "wanfan", meaning: "cơm tối" },
+            { word: "以后", pinyin: "yihou", meaning: "sau này" },
+            { word: "差", pinyin: "cha", meaning: "kém" },
+            { word: "分钟", pinyin: "fenzhong", meaning: "phút" },
+            { word: "上课", pinyin: "shangke", meaning: "lên lớp" },
+            { word: "节", pinyin: "jie", meaning: "tiết" },
+            { word: "教室", pinyin: "jiaoshi", meaning: "lớp học" },
+            { word: "操场", pinyin: "caochang", meaning: "sân vận động" },
+            { word: "洗", pinyin: "xi", meaning: "rửa" },
+            { word: "洗澡", pinyin: "xizao", meaning: "tắm" },
+            { word: "然后", pinyin: "ranhou", meaning: "sau đó" },
+            { word: "爬", pinyin: "pa", meaning: "leo, trèo" },
+            { word: "山", pinyin: "shan", meaning: "núi" },
+            { word: "出发", pinyin: "chufa", meaning: "xuất phát" },
+            { word: "前", pinyin: "qian", meaning: "trước" },
+            { word: "集合", pinyin: "jihe", meaning: "tập hợp" },
+            { word: "上车", pinyin: "shangche", meaning: "lên xe" },
+            { word: "下车", pinyin: "xiache", meaning: "xuống xe" },
+            { word: "准时", pinyin: "zhunshi", meaning: "đúng giờ" }
+        ],
+        "7": [
+            { word: "同事", pinyin: "tongshi", meaning: "đồng nghiệp" },
+            { word: "以前", pinyin: "yiqian", meaning: "trước đây" },
+            { word: "银行", pinyin: "yinhang", meaning: "ngân hàng" },
+            { word: "久", pinyin: "jiu", meaning: "lâu" },
+            { word: "感兴趣", pinyin: "ganxingqu", meaning: "có hứng thú" },
+            { word: "结婚", pinyin: "jiehun", meaning: "kết hôn" },
+            { word: "欢迎", pinyin: "huanying", meaning: "hoan nghênh" },
+            { word: "迟到", pinyin: "chidao", meaning: "đến muộn" },
+            { word: "半", pinyin: "ban", meaning: "nửa, rưỡi" },
+            { word: "接", pinyin: "jie", meaning: "đón tiếp" },
+            { word: "刻", pinyin: "ke", meaning: "15 phút" },
+            { word: "差", pinyin: "cha", meaning: "kém" },
+            { word: "叫", pinyin: "jiao", meaning: "kêu, gọi" },
+            { word: "让", pinyin: "rang", meaning: "để, để cho" },
+            { word: "大家", pinyin: "dajia", meaning: "mọi người" },
+            { word: "谈", pinyin: "tan", meaning: "nói chuyện" },
+            { word: "自己", pinyin: "ziji", meaning: "bản thân" },
+            { word: "爱好", pinyin: "aihao", meaning: "sở thích" },
+            { word: "京剧", pinyin: "jingju", meaning: "Kinh kịch" },
+            { word: "喜欢", pinyin: "xihuan", meaning: "thích" },
+            { word: "非常", pinyin: "feichang", meaning: "vô cùng" },
+            { word: "唱", pinyin: "chang", meaning: "hát" },
+            { word: "玩", pinyin: "wan", meaning: "chơi" },
+            { word: "电脑", pinyin: "diannao", meaning: "máy tính" },
+            { word: "感到", pinyin: "gandao", meaning: "cảm thấy" },
+            { word: "心情", pinyin: "xinqing", meaning: "tâm tình" },
+            { word: "愉快", pinyin: "yukuai", meaning: "vui vẻ" },
+            { word: "业余", pinyin: "yeyu", meaning: "nghiệp dư" },
+            { word: "以前", pinyin: "yiqian", meaning: "trước đây" },
+            { word: "对", pinyin: "dui", meaning: "đối với" },
+            { word: "书法", pinyin: "shufa", meaning: "thư pháp" },
+            { word: "派", pinyin: "pai", meaning: "phái, cử" },
+            { word: "高兴", pinyin: "gaoxing", meaning: "vui vẻ" },
+            { word: "画", pinyin: "hua", meaning: "vẽ" },
+            { word: "画儿", pinyin: "huar", meaning: "tranh vẽ" }
+        ],
+        "8": [
+            { word: "满意", pinyin: "manyi", meaning: "hài lòng" },
+            { word: "电梯", pinyin: "dianti", meaning: "thang máy" },
+            { word: "层", pinyin: "ceng", meaning: "từng" },
+            { word: "害怕", pinyin: "haipa", meaning: "sợ hãi" },
+            { word: "熊猫", pinyin: "xiongmao", meaning: "gấu trúc" },
+            { word: "见面", pinyin: "jianmian", meaning: "gặp mặt" },
+            { word: "安静", pinyin: "anjing", meaning: "yên tĩnh" },
+            { word: "一会儿", pinyin: "yihuir", meaning: "một lát" },
+            { word: "马上", pinyin: "mashang", meaning: "lập tức" },
+            { word: "洗手间", pinyin: "xishoujian", meaning: "nhà vệ sinh" },
+            { word: "老", pinyin: "lao", meaning: "già, cũ" },
+            { word: "几乎", pinyin: "jihu", meaning: "gần như" },
+            { word: "变化", pinyin: "bianhua", meaning: "thay đổi" },
+            { word: "健康", pinyin: "jiankang", meaning: "khỏe mạnh" },
+            { word: "重要", pinyin: "zhongyao", meaning: "quan trọng" },
+            { word: "可乐", pinyin: "kele", meaning: "coca-cola" },
+            { word: "边", pinyin: "bian", meaning: "bên, phía" },
+            { word: "东边", pinyin: "dongbian", meaning: "phía Đông" },
+            { word: "西边", pinyin: "xibian", meaning: "phía Tây" },
+            { word: "南边", pinyin: "nanbian", meaning: "phía Nam" },
+            { word: "北边", pinyin: "beibian", meaning: "phía Bắc" },
+            { word: "前边", pinyin: "qianbian", meaning: "phía trước" },
+            { word: "后边", pinyin: "houbian", meaning: "phía sau" },
+            { word: "左边", pinyin: "zuobian", meaning: "bên trái" },
+            { word: "右边", pinyin: "youbian", meaning: "bên phải" },
+            { word: "里边", pinyin: "libian", meaning: "phía trong" },
+            { word: "外边", pinyin: "waibian", meaning: "phía ngoài" },
+            { word: "上边", pinyin: "shangbian", meaning: "phía trên" },
+            { word: "下边", pinyin: "xiabian", meaning: "phía dưới" },
+            { word: "离", pinyin: "li", meaning: "cách" },
+            { word: "远", pinyin: "yuan", meaning: "xa" },
+            { word: "近", pinyin: "jin", meaning: "gần" },
+            { word: "地方", pinyin: "difang", meaning: "địa phương, nơi" },
+            { word: "足球场", pinyin: "zuqiuchang", meaning: "sân bóng đá" },
+            { word: "足球", pinyin: "zuqiu", meaning: "bóng đá" },
+            { word: "劳驾", pinyin: "laojia", meaning: "cảm phiền" },
+            { word: "打听", pinyin: "dating", meaning: "nghe ngóng" },
+            { word: "博物馆", pinyin: "bowuguan", meaning: "bảo tàng" },
+            { word: "和平", pinyin: "heping", meaning: "hòa bình" },
+            { word: "广场", pinyin: "guangchang", meaning: "quảng trường" },
+            { word: "中间", pinyin: "zhongjian", meaning: "giữa" },
+            { word: "从", pinyin: "cong", meaning: "từ" },
+            { word: "到", pinyin: "dao", meaning: "đến" },
+            { word: "红绿灯", pinyin: "honglvdeng", meaning: "đèn giao thông" },
+            { word: "灯", pinyin: "deng", meaning: "đèn" },
+            { word: "往", pinyin: "wang", meaning: "về phía" },
+            { word: "拐", pinyin: "guai", meaning: "quẹo, rẽ" },
+            { word: "马路", pinyin: "malu", meaning: "đường cái" },
+            { word: "路", pinyin: "lu", meaning: "đường" }
+        ],
+        "9": [
+            { word: "中文", pinyin: "zhongwen", meaning: "tiếng Trung Quốc" },
+            { word: "班", pinyin: "ban", meaning: "lớp" },
+            { word: "一样", pinyin: "yiyang", meaning: "giống nhau" },
+            { word: "最后", pinyin: "zuihou", meaning: "cuối cùng" },
+            { word: "放心", pinyin: "fangxin", meaning: "yên tâm" },
+            { word: "一定", pinyin: "yiding", meaning: "nhất định" },
+            { word: "担心", pinyin: "danxin", meaning: "lo lắng" },
+            { word: "比较", pinyin: "bijiao", meaning: "tương đối" },
+            { word: "了解", pinyin: "liaojie", meaning: "hiểu rõ" },
+            { word: "先", pinyin: "xian", meaning: "trước tiên" },
+            { word: "中间", pinyin: "zhongjian", meaning: "giữa" },
+            { word: "参加", pinyin: "canjia", meaning: "tham gia" },
+            { word: "影响", pinyin: "yingxiang", meaning: "ảnh hưởng" },
+            { word: "会", pinyin: "hui", meaning: "có thể, sẽ, biết" },
+            { word: "打", pinyin: "da", meaning: "đánh, chơi" },
+            { word: "太极拳", pinyin: "taijiquan", meaning: "Thái cực quyền" },
+            { word: "听说", pinyin: "tingshuo", meaning: "nghe nói" },
+            { word: "报名", pinyin: "baoming", meaning: "báo danh" },
+            { word: "开始", pinyin: "kaishi", meaning: "bắt đầu" },
+            { word: "能", pinyin: "neng", meaning: "có thể" },
+            { word: "再", pinyin: "zai", meaning: "lại, nữa" },
+            { word: "遍", pinyin: "bian", meaning: "lần" },
+            { word: "懂", pinyin: "dong", meaning: "hiểu" },
+            { word: "舒服", pinyin: "shufu", meaning: "thoải mái" },
+            { word: "意思", pinyin: "yisi", meaning: "ý nghĩa" },
+            { word: "次", pinyin: "ci", meaning: "lần" },
+            { word: "小时", pinyin: "xiaoshi", meaning: "tiếng" },
+            { word: "请假", pinyin: "qingjia", meaning: "xin phép nghỉ" },
+            { word: "头疼", pinyin: "touteng", meaning: "đau đầu" },
+            { word: "疼", pinyin: "teng", meaning: "đau" },
+            { word: "咳嗽", pinyin: "kesou", meaning: "ho" },
+            { word: "看病", pinyin: "kanbing", meaning: "khám bệnh" },
+            { word: "病", pinyin: "bing", meaning: "bệnh" }
+        ],
+        "10": [
+            { word: "个子", pinyin: "gezi", meaning: "vóc dáng" },
+            { word: "矮", pinyin: "ai", meaning: "thấp" },
+            { word: "历史", pinyin: "lishi", meaning: "Lịch sử" },
+            { word: "体育", pinyin: "tiyu", meaning: "Thể dục" },
+            { word: "数学", pinyin: "shuxue", meaning: "Toán" },
+            { word: "方便", pinyin: "fangbian", meaning: "thuận tiện" },
+            { word: "自行车", pinyin: "zixingche", meaning: "xe đạp" },
+            { word: "骑", pinyin: "qi", meaning: "cưỡi ngựa, đạp xe, lái xe" },
+            { word: "旧", pinyin: "jiu", meaning: "cũ" },
+            { word: "换", pinyin: "huan", meaning: "đổi" },
+            { word: "地方", pinyin: "difang", meaning: "nơi" },
+            { word: "中介", pinyin: "zhongjie", meaning: "môi giới" },
+            { word: "主要", pinyin: "zhuyao", meaning: "chủ yếu" },
+            { word: "环境", pinyin: "huanjing", meaning: "hoàn cảnh" },
+            { word: "附近", pinyin: "fujin", meaning: "lân cận" },
+            { word: "电视台", pinyin: "dianshitai", meaning: "đài truyền hình" },
+            { word: "台", pinyin: "tai", meaning: "đài, sân khấu" },
+            { word: "表演", pinyin: "biaoyan", meaning: "biểu diễn" },
+            { word: "节目", pinyin: "jiemu", meaning: "tiết mục" },
+            { word: "愿意", pinyin: "yuanyi", meaning: "bằng lòng" },
+            { word: "不错", pinyin: "bucuo", meaning: "tốt, hay" },
+            { word: "错", pinyin: "cuo", meaning: "sai" },
+            { word: "进步", pinyin: "jinbu", meaning: "tiến bộ" },
+            { word: "水平", pinyin: "shuiping", meaning: "trình độ" },
+            { word: "提高", pinyin: "tigao", meaning: "nâng cao" },
+            { word: "快", pinyin: "kuai", meaning: "nhanh" },
+            { word: "哪里", pinyin: "nali", meaning: "ở đâu" },
+            { word: "准", pinyin: "zhun", meaning: "chính xác" },
+            { word: "流利", pinyin: "liuli", meaning: "lưu loát" },
+            { word: "那么", pinyin: "name", meaning: "vậy, thế kia" },
+            { word: "早", pinyin: "zao", meaning: "sớm" },
+            { word: "运动", pinyin: "yundong", meaning: "vận động" },
+            { word: "跑步", pinyin: "paobu", meaning: "chạy bộ" },
+            { word: "跑", pinyin: "pao", meaning: "chạy" },
+            { word: "篮球", pinyin: "lanqiu", meaning: "bóng rổ" },
+            { word: "球", pinyin: "qiu", meaning: "bóng, cầu" },
+            { word: "刚才", pinyin: "gangcai", meaning: "lúc nãy" },
+            { word: "坚持", pinyin: "jianchi", meaning: "kiên trì" },
+            { word: "因为", pinyin: "yinwei", meaning: "bởi vì" }
+        ]
+    };
+
+    let currentLesson = [];
+    let currentWord = {};
+    let wrongAttempts = 0;
+
+    function loadLesson() {
+        const lesson = document.getElementById("lessonSelect").value;
+        currentLesson = vocabData[lesson] || [];
+        nextWord();
+    }
+
+    function nextWord() {
+        if (currentLesson.length === 0) return;
+        
+        const randomIndex = Math.floor(Math.random() * currentLesson.length);
+        currentWord = currentLesson[randomIndex];
+        
+        document.getElementById("wordDisplay").innerText = currentWord.word;
+        
+        document.getElementById("pinyinInput").value = "";
+        document.getElementById("meaningInput").value = "";
+        document.getElementById("result").innerText = "";
+        document.getElementById("result").className = "";
+        
+        wrongAttempts = 0;
+    }
+
+    function removeAccents(str) {
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function checkAnswer() {
+        const userPinyin = document.getElementById("pinyinInput").value;
+        const userMeaning = document.getElementById("meaningInput").value;
+
+        const isPinyinCorrect = removeAccents(userPinyin) === removeAccents(currentWord.pinyin);
+        // Kiểm tra xem nghĩa người dùng nhập có chứa trong đáp án hoặc ngược lại không
+        const isMeaningCorrect = removeAccents(userMeaning).includes(removeAccents(currentWord.meaning)) || 
+                                 removeAccents(currentWord.meaning).includes(removeAccents(userMeaning));
+
+        const resultDiv = document.getElementById("result");
+
+        if (isPinyinCorrect && isMeaningCorrect && userMeaning !== "") {
+            resultDiv.innerText = "🎉 Chính xác!";
+            resultDiv.className = "correct";
+        } else {
+            wrongAttempts++;
+            if (wrongAttempts >= 3) {
+                resultDiv.innerText = `❌ Bạn đã sai 3 lần.\nĐáp án đúng là: [ Pinyin: ${currentWord.pinyin} | Nghĩa: ${currentWord.meaning} ]`;
+                resultDiv.className = "incorrect";
+            } else {
+                resultDiv.innerText = `⚠️ Sai rồi. Bạn còn ${3 - wrongAttempts} lần thử.`;
+                resultDiv.className = "warning";
+            }
+        }
+    }
+
+    // Khởi tạo ngay khi trang web vừa được mở
+    window.onload = loadLesson;
+    
+    // Thêm tính năng bấm Enter để kiểm tra nhanh
+    document.getElementById("meaningInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkAnswer();
+        }
+    });
+    document.getElementById("pinyinInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkAnswer();
+        }
+    });
+</script>
+
+</body>
+</html>
